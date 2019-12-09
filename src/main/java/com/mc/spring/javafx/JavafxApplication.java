@@ -1,13 +1,16 @@
 package com.mc.spring.javafx;
 
+import com.mc.spring.javafx.controller.MainController;
 import com.mc.spring.javafx.controller.PersonController;
 import com.mc.spring.javafx.controller.PersonEditController;
 import com.mc.spring.javafx.model.Person;
+import com.mc.spring.javafx.model.PersonListWrapper;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
@@ -17,9 +20,14 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.prefs.Preferences;
 
-import javax.imageio.ImageIO;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
 
 @SpringBootApplication
 public class JavafxApplication extends Application {
@@ -47,10 +55,20 @@ public class JavafxApplication extends Application {
 
 			Scene scene = new Scene(rootLayout);
 			mainStage.setScene(scene);
+
+			MainController controller = fxmlLoader.getController();
+			controller.setMainApp(this);
+
 			mainStage.show();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+
+		File file = getPersonFilePath();
+		if (file != null) {
+			loadPersonsFromFile(file);
+		}
+
 	}
 
 	public void showPerson() {
@@ -115,6 +133,68 @@ public class JavafxApplication extends Application {
 		}
 		initRootlayout();
 		showPerson();
+	}
+
+	public File getPersonFilePath() {
+		Preferences prefs = Preferences.userNodeForPackage(getClass());
+		String filePath = prefs.get("filePath", null);
+		if (filePath != null) {
+			return new File(filePath);
+		} else {
+			return null;
+		}
+	}
+
+	public void setPersonFilePath(File file) {
+		Preferences prefs = Preferences.userNodeForPackage(getClass());
+		if (file != null) {
+			prefs.put("filePath", file.getPath());
+
+			mainStage.setTitle("AdressApp - " + file.getName());
+		} else {
+			prefs.remove("filePath");
+			mainStage.setTitle("AdressApp");
+		}
+	}
+
+	public void loadPersonsFromFile(File file) {
+		try {
+			JAXBContext context = JAXBContext.newInstance(PersonListWrapper.class);
+			Unmarshaller um = context.createUnmarshaller();
+			PersonListWrapper wrapper = (PersonListWrapper) um.unmarshal(file);
+			personData.clear();
+			personData.addAll(wrapper.getPersons());
+			setPersonFilePath(file);
+		} catch (JAXBException e) {
+			Alert alert = new Alert(Alert.AlertType.ERROR);
+			alert.setTitle("Error");
+			alert.setHeaderText("Could not load data");
+			alert.setContentText("Could not load data from file:\n" + file.getPath());
+
+			alert.showAndWait();
+		}
+	}
+
+	public void savePersonDataToFile(File file) {
+		try {
+			JAXBContext context = JAXBContext.newInstance(PersonListWrapper.class);
+			Marshaller m = context.createMarshaller();
+			m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+
+			PersonListWrapper wrapper = new PersonListWrapper();
+			wrapper.setPersons(personData);
+			m.marshal(wrapper, file);
+
+			setPersonFilePath(file);
+
+		} catch (JAXBException e) {
+			Alert alert = new Alert(Alert.AlertType.ERROR);
+			alert.setTitle("Error");
+			alert.setHeaderText("Could not save data");
+			alert.setContentText("Could not save data to file:\n" + file.getPath());
+
+			alert.showAndWait();
+		}
 	}
 
 	public Stage getMainStage() {
