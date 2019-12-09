@@ -25,7 +25,7 @@ public class DateUtil {
     }
 
     public static boolean validDate(String date) {
-        return DATE_TIME_FORMATTER.parse(date) != null;
+        return parse(date) != null;
     }
 
 }
