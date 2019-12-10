@@ -72,6 +72,11 @@ public class MainController {
     }
 
     @FXML
+    private void handleShowStatistics() {
+        mainApp.showBirthdayStatistics();
+    }
+
+    @FXML
     private void handleExit() {
         System.exit(0);
     }

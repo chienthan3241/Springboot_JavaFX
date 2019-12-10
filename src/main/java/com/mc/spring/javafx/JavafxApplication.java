@@ -1,5 +1,6 @@
 package com.mc.spring.javafx;
 
+import com.mc.spring.javafx.controller.BirthdayStatisticsController;
 import com.mc.spring.javafx.controller.MainController;
 import com.mc.spring.javafx.controller.PersonController;
 import com.mc.spring.javafx.controller.PersonEditController;
@@ -195,6 +196,28 @@ public class JavafxApplication extends Application {
 
 			alert.showAndWait();
 		}
+	}
+
+	public void showBirthdayStatistics() {
+		try {
+			FXMLLoader loader = new FXMLLoader();
+			loader.setLocation(JavafxApplication.class.getResource("/fxml/BirthdayStatistics.fxml"));
+			AnchorPane page = (AnchorPane) loader.load();
+			Stage dialogStage = new Stage();
+			dialogStage.setTitle("Birthday Statistics");
+			dialogStage.initModality(Modality.WINDOW_MODAL);
+			dialogStage.initOwner(mainStage);
+			Scene scene = new Scene(page);
+			dialogStage.setScene(scene);
+
+			BirthdayStatisticsController controller = loader.getController();
+
+			controller.setPersonData(personData);
+			dialogStage.show();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
 	}
 
 	public Stage getMainStage() {
